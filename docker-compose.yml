@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:latest
+    container_name: n8n-local
+    ports:
+      # Publica el puerto 5678 del contenedor al 5678 del host
+      - "5678:5678"
+    env_file:
+      - .env
+    environment:
+      # Opcionales extra; si ya los tienes en .env, puedes quitar estas líneas
+      - TZ=America/Bogota
+      # Permitir ciertos módulos externos en Function/Code nodes (ajusta si no los usas)
+      - NODE_FUNCTION_ALLOW_EXTERNAL=axios,crypto-js
+      # Para no llenar disco con logs de ejecuciones exitosas (optimización básica)
+      - EXECUTIONS_DATA_SAVE_ON_SUCCESS=none
+    volumes:
+      # Datos de n8n (workflows, credenciales, etc.)
+      - ./n8n_data:/home/node/.n8n
+      # Carpeta local extra por si quieres leer/escribir archivos desde n8n
+      - ./local_files:/files
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5678/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
